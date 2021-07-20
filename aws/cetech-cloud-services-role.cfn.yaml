@@ -1,0 +1,74 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template creates a role to allow access by
+  CE Tech Cloud Services
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Role Details
+        Parameters:
+          - pServicesRoleLabel
+    ParameterLabels:
+      pServicesRoleLabel:
+        default: Role label
+Outputs:
+  servicesRoleAccount:
+    Description: AWS Account ID
+    Value: !Ref 'AWS::AccountId'
+  servicesRoleName:
+    Description: Managed Cloud Services role name
+    Value: !Sub '${pServicesRoleLabel}-role'
+  servicesRoleArn:
+    Description: Managed Cloud Services role ARN
+    Value: !GetAtt 'rServicesRole.Arn'
+Conditions:
+  cRoleNameSpecified: !Not
+    - !Equals
+      - ''
+      - !Ref 'pServicesRoleLabel'
+Mappings:
+  PermissionPolicy:
+    ViewOnly:
+      PolicyArn: 'arn:aws:iam::aws:policy/job-function/ViewOnlyAccess'
+    SupportUser:
+      PolicyArn: 'arn:aws:iam::aws:policy/job-function/SupportUser'
+    SystemAdministrator:
+      PolicyArn: 'arn:aws:iam::aws:policy/job-function/SystemAdministrator'
+    PowerUser:
+      PolicyArn: 'arn:aws:iam::aws:policy/PowerUserAccess'
+Parameters:
+  pServicesRoleLabel:
+    Type: String
+    Default: cetech-cloud-services
+    Description: 'Enter label for IAM resources
+      (default: cetech-cloud-services)'
+  pServicesRolePermissions:
+    Type: String
+    Default: ViewOnly
+    Description: 'Select permission policy for the services role'
+    AllowedValues:
+      - ViewOnly
+      - SupportUser
+      - SystemAdministrator
+      - PowerUser
+Resources:
+  rServicesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !If
+        - cRoleNameSpecified
+        - !Sub '${pServicesRoleLabel}-role'
+        - !Ref 'AWS::NoValue'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::632481871348:root
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !FindInMap
+          - PermissionPolicy
+          - !Ref pServicesRolePermissions
+          - 'PolicyArn'

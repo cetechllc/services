@@ -1,0 +1,96 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template creates a role to allow access by
+  CE Tech Cloud Billing
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Role Details
+        Parameters:
+          - pBillingRoleLabel
+          - pExternalId
+      - Label:
+          default: 'OPTIONAL: Billing Data'
+        Parameters:
+          - pDbrExportBucket
+    ParameterLabels:
+      pBillingRoleLabel:
+        default: Role label
+      pExternalId:
+        default: External ID
+      pDbrExportBucket:
+        default: S3 bucket for Detailed Billing Report (DBR) export
+Outputs:
+  billingRoleName:
+    Description: Managed Cloud Billing role name
+    Value: !Sub '${pBillingRoleLabel}-role'
+  billingRoleArn:
+    Description: Managed Cloud Billing role ARN
+    Value: !GetAtt 'rBillingRole.Arn'
+  billingRoleExternalId:
+    Description: Managed Cloud Billing role external ID
+    Value: !Ref 'pExternalId'
+  billingDbrExport:
+    Description: Export location for Detailed Billing Report (DBR)
+    Value: !Ref 'pDbrExportBucket'
+Conditions:
+  cRoleNameSpecified: !Not
+    - !Equals
+      - ''
+      - !Ref 'pBillingRoleLabel'
+  cDbrSpecified: !Not
+    - !Equals
+      - N/A
+      - !Ref 'pDbrExportBucket'
+Parameters:
+  pBillingRoleLabel:
+    Type: String
+    Default: cetech-cloud-billing
+    Description: 'Enter label for IAM resources (default: cetech-cloud-billing)'
+  pExternalId:
+    Type: String
+    Default: ''
+    Description: Enter external ID provided by CE Tech
+  pDbrExportBucket:
+    Type: String
+    Default: N/A
+    Description: Enter S3 bucket name where the Detailed Billing Report (DBR)
+      should be exported. This template does not create or validate the
+      existence of the specified bucket.
+Resources:
+  rBillingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !If
+        - cRoleNameSpecified
+        - !Sub '${pBillingRoleLabel}-role'
+        - !Ref 'AWS::NoValue'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::328676173091:root
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref 'pExternalId'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+  dbrPolicy:
+    Condition: cDbrSpecified
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${pBillingRoleLabel}-policy-dbr'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Sub 'arn:aws:s3:::${pDbrExportBucket}'
+              - !Sub 'arn:aws:s3:::${pDbrExportBucket}/*'
+      Roles:
+        - !Ref 'rBillingRole'
