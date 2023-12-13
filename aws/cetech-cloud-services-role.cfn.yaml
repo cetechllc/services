@@ -37,6 +37,8 @@ Mappings:
       PolicyArn: 'arn:aws:iam::aws:policy/job-function/SystemAdministrator'
     PowerUser:
       PolicyArn: 'arn:aws:iam::aws:policy/PowerUserAccess'
+    AdministratorAccess:
+      PolicyArn: 'arn:aws:iam::aws:policy/AdministratorAccess'
 Parameters:
   pServicesRoleLabel:
     Type: String
@@ -52,6 +54,7 @@ Parameters:
       - SupportUser
       - SystemAdministrator
       - PowerUser
+      - AdministratorAccess
 Resources:
   rServicesRole:
     Type: AWS::IAM::Role
