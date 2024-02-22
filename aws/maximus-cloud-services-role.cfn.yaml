@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 Description: CloudFormation template creates a role to allow access by
-  MIS Solutions
+  Maximus Data
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -42,9 +42,9 @@ Mappings:
 Parameters:
   pServicesRoleLabel:
     Type: String
-    Default: misfirm-cloud-services
+    Default: maximus-cloud-services
     Description: 'Enter label for IAM resources
-      (default: misfirm-cloud-services)'
+      (default: maximus-cloud-services)'
   pServicesRolePermissions:
     Type: String
     Default: AdministratorAccess
