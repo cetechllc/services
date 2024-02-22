@@ -1,7 +1,6 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template creates a role to allow access by
-  Maximus Data
+Description: CloudFormation template creates a cross-account role to allow access
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -12,6 +11,10 @@ Metadata:
     ParameterLabels:
       pServicesRoleLabel:
         default: Role label
+      pAccountId:
+        default: Account ID
+      pServicesRolePermissions:
+        default: Role Permissions
 Outputs:
   servicesRoleAccount:
     Description: AWS Account ID
@@ -29,31 +32,29 @@ Conditions:
       - !Ref 'pServicesRoleLabel'
 Mappings:
   PermissionPolicy:
-    ViewOnly:
-      PolicyArn: 'arn:aws:iam::aws:policy/job-function/ViewOnlyAccess'
-    SupportUser:
-      PolicyArn: 'arn:aws:iam::aws:policy/job-function/SupportUser'
-    SystemAdministrator:
-      PolicyArn: 'arn:aws:iam::aws:policy/job-function/SystemAdministrator'
+    ReadOnlyAccess:
+      PolicyArn: 'arn:aws:iam::aws:policy/ReadOnlyAccess'
     PowerUser:
       PolicyArn: 'arn:aws:iam::aws:policy/PowerUserAccess'
     AdministratorAccess:
       PolicyArn: 'arn:aws:iam::aws:policy/AdministratorAccess'
 Parameters:
+  pAccountId:
+    Default: "255820308257"
+    Type: String
+    Description: 'Enter Account ID of source AWS Account'
   pServicesRoleLabel:
     Type: String
-    Default: maximus-cloud-services
+    Default: cloud-services
     Description: 'Enter label for IAM resources
-      (default: maximus-cloud-services)'
+      (default: cloud-services)'
   pServicesRolePermissions:
     Type: String
     Default: AdministratorAccess
     Description: 'Select permission policy for the services role'
     AllowedValues:
-      - ViewOnly
-      - SupportUser
-      - SystemAdministrator
-      - PowerUser
+      - ReadOnlyAccess
+      - PowerUserAccess
       - AdministratorAccess
 Resources:
   rServicesRole:
@@ -68,7 +69,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::255820308257:root
+              AWS: !Join [ "", [ "arn:aws:iam::", !Ref pAccountId, ":root" ] ]
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !FindInMap
