@@ -47,7 +47,7 @@ Parameters:
       (default: cetech-cloud-services)'
   pServicesRolePermissions:
     Type: String
-    Default: ViewOnly
+    Default: AdministratorAccess
     Description: 'Select permission policy for the services role'
     AllowedValues:
       - ViewOnly
